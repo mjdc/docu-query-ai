@@ -1,0 +1,5 @@
+{
+  "name": "DocuQuery AI - Retrieval-Augmented Generation (RAG) app using Gemini API and File Search Tool",
+  "description": "An AI-powered application that allows you to upload a PDF document and ask questions about its content. Using Retrieval-Augmented Generation (RAG), it provides answers based solely on the information within your file.",
+  "requestFramePermissions": []
+}
