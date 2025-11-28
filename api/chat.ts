@@ -1,6 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-export default async function handler(req, res) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
@@ -58,7 +59,42 @@ ${question}
       contents: prompt,
     });
 
-    return res.status(200).json({ answer: response.text });
+    // The GenAI SDK can return the model output in different shapes depending on version
+    // and streaming vs non-streaming usage. Try a few common paths to extract a text string
+    // and fall back to a safe stringified representation so the client always receives valid JSON.
+    let answerText: string = '';
+
+    try {
+      // Common simple property
+      if (response && typeof response.text === 'string') {
+        answerText = response.text;
+      }
+
+      // genai newer shapes: output[0].content[0].text or candidates
+      if (!answerText && response?.output && Array.isArray(response.output) && response.output[0]) {
+        const out = response.output[0];
+        if (out?.content && Array.isArray(out.content) && out.content[0]?.text) {
+          answerText = out.content[0].text;
+        }
+      }
+
+      if (!answerText && response?.candidates && Array.isArray(response.candidates) && response.candidates[0]) {
+        const cand = response.candidates[0];
+        if (cand?.content && Array.isArray(cand.content) && cand.content[0]?.text) {
+          answerText = cand.content[0].text;
+        }
+      }
+
+      // last resort: if response has a single top-level string somewhere, stringify the whole response
+      if (!answerText) {
+        answerText = typeof response === 'string' ? response : JSON.stringify(response);
+      }
+    } catch (e) {
+      console.error('Error extracting text from Gemini response shape:', e, response);
+      answerText = JSON.stringify(response);
+    }
+
+    return res.status(200).json({ answer: answerText });
 
   } catch (error) {
     console.error("Gemini API Error:", error);
