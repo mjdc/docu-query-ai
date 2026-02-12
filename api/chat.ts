@@ -29,12 +29,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const { documentText, question } = body || {};
 
     if (!documentText || !question) {
-        return res.status(400).json({ error: 'Missing document text or question in request body' });
+      return res.status(400).json({ error: 'Missing document text or question in request body' });
     }
 
     const ai = new GoogleGenAI({ apiKey });
     const model = "gemini-2.5-flash";
-  
+
     const prompt = `You are a hilarious stand-up comedian who has been given the task of reading a document and answering questions about it.
 
 Your goal is to answer the user's question based STRICTLY and SOLELY on the content of the document below, but you must deliver the answer in a funny, witty, and entertaining style.
@@ -44,6 +44,8 @@ Guidelines:
 2. Keep the core facts accurate. You are a comedian, not a liar. The information must come from the text.
 3. If the answer isn't in the text, make a joke about how the author forgot to include that specific detail.
 4. Do not use outside knowledge to answer the question, only use the provided document.
+5. Your entire response must be ONE single paragraph.
+6. Your response must NOT exceed 200 words.
 
 DOCUMENT:
 ---
